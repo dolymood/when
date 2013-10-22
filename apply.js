@@ -12,7 +12,7 @@
 define(function() {
 
     var toString = Object.prototype.toString;
-    
+
     /**
      * Creates a function that accepts a function that takes individual
      * arguments (it can be variadic, too), and returns a new function that
@@ -58,13 +58,9 @@ define(function() {
     };
 
 });
-})(typeof define == 'function'
-    ? define
-    : function (factory) { typeof module != 'undefined'
-        ? (module.exports  = factory())
-        : (this.when_apply = factory());
-    }
-    // Boilerplate for AMD, Node, and browser global
+})(
+	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(require); }
+	// Boilerplate for AMD and Node
 );
 
 

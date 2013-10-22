@@ -1,4 +1,4 @@
-/** @license MIT License (c) copyright B Cavalier & J Hann */
+/** @license MIT License (c) copyright 2011-2013 original author or authors */
 
 /**
  * pipeline.js
@@ -7,11 +7,17 @@
  * of the previous as an argument to the next.  Like a shell
  * pipeline, e.g. `cat file.txt | grep 'foo' | sed -e 's/foo/bar/g'
  *
- * @author brian@hovercraftstudios.com
+ * @author Brian Cavalier
+ * @author John Hann
  */
 
 (function(define) {
-define(['./when'], function(when) {
+define(function(require) {
+
+	var when, slice;
+
+	when = require('./when');
+	slice = Array.prototype.slice;
 
 	/**
 	 * Run array of tasks in a pipeline where the next
@@ -22,36 +28,27 @@ define(['./when'], function(when) {
 	 * @return {Promise} promise for return value of the final task
 	 */
 	return function pipeline(tasks /* initialArgs... */) {
-		var initialArgs, runTask;
-
-		initialArgs = Array.prototype.slice.call(arguments, 1);
-
 		// Self-optimizing function to run first task with multiple
 		// args using apply, but subsequence tasks via direct invocation
-		runTask = function(task, args) {
-			runTask = function(task, arg) {
+		var runTask = function(args, task) {
+			runTask = function(arg, task) {
 				return task(arg);
 			};
-			
+
 			return task.apply(null, args);
 		};
 
-		return when.reduce(tasks,
-			function(args, task) {
-				return runTask(task, args);
-			},
-			initialArgs
-		);
+		return when.all(slice.call(arguments, 1)).then(function(args) {
+			return when.reduce(tasks, function(arg, task) {
+				return runTask(arg, task);
+			}, args);
+		});
 	};
 
 });
-})(typeof define == 'function' && define.amd
-	? define
-	: function (deps, factory) { typeof exports == 'object'
-		? (module.exports = factory(require('./when')))
-		: (this.when_pipeline = factory(this.when));
-	}
-	// Boilerplate for AMD, Node, and browser global
+})(
+	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(require); }
+	// Boilerplate for AMD and Node
 );
 
 

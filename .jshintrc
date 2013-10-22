@@ -21,10 +21,11 @@
 	"nonew": true,
 	"quotmark": "single",
 	"strict": false,
+	"sub": true,
 	"trailing": true,
 	"undef": true,
 	"unused": true,
 
 	"maxdepth": 3,
-	"maxcomplexity": 4
+	"maxcomplexity": 5
 }

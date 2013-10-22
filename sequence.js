@@ -1,4 +1,4 @@
-/** @license MIT License (c) copyright B Cavalier & J Hann */
+/** @license MIT License (c) copyright 2011-2013 original author or authors */
 
 /**
  * sequence.js
@@ -6,11 +6,17 @@
  * Run a set of task functions in sequence.  All tasks will
  * receive the same args.
  *
- * @author brian@hovercraftstudios.com
+ * @author Brian Cavalier
+ * @author John Hann
  */
 
 (function(define) {
-define(['./when'], function(when) {
+define(function(require) {
+
+	var when, slice;
+
+	when = require('./when');
+	slice = Array.prototype.slice;
 
 	/**
 	 * Run array of tasks in sequence with no overlap
@@ -21,23 +27,24 @@ define(['./when'], function(when) {
 	 * to position of the task in the tasks array
 	 */
 	return function sequence(tasks /*, args... */) {
-		var args = Array.prototype.slice.call(arguments, 1);
-		return when.reduce(tasks, function(results, task) {
-			return when(task.apply(null, args), function(result) {
-				results.push(result);
-				return results;
-			});
-		}, []);
+		var results = [];
+
+		return when.all(slice.call(arguments, 1)).then(function(args) {
+			return when.reduce(tasks, function(results, task) {
+				return when(task.apply(null, args), addResult);
+			}, results);
+		});
+
+		function addResult(result) {
+			results.push(result);
+			return results;
+		}
 	};
 
 });
-})(typeof define == 'function' && define.amd
-	? define
-	: function (deps, factory) { typeof exports == 'object'
-		? (module.exports = factory(require('./when')))
-		: (this.when_sequence = factory(this.when));
-	}
-	// Boilerplate for AMD, Node, and browser global
+})(
+	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(require); }
+	// Boilerplate for AMD and Node
 );
 
 

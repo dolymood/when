@@ -1,61 +1,60 @@
-/** @license MIT License (c) copyright B Cavalier & J Hann */
-
-/*global setTimeout:true*/
+/** @license MIT License (c) copyright 2011-2013 original author or authors */
 
 /**
  * delay.js
  *
  * Helper that returns a promise that resolves after a delay.
  *
- * @author brian@hovercraftstudios.com
+ * @author Brian Cavalier
+ * @author John Hann
  */
 
 (function(define) {
-define(['./when'], function(when) {
+define(function(require) {
+	/*global setTimeout*/
+	var when, setTimer, cjsRequire, vertxSetTimer;
 
-    var undef;
+	when = require('./when');
+	cjsRequire = require;
+
+	try {
+		vertxSetTimer = cjsRequire('vertx').setTimer;
+		setTimer = function (f, ms) { return vertxSetTimer(ms, f); };
+	} catch(e) {
+		setTimer = setTimeout;
+	}
 
     /**
-     * Creates a new promise that will resolve after a msec delay.  If promise
-     * is supplied, the delay will start *after* the supplied promise is resolved.
+     * Creates a new promise that will resolve after a msec delay.  If
+	 * value is supplied, the delay will start *after* the supplied
+	 * value is resolved.
      *
-     * Usage:
-     * // Do something after 1 second, similar to using setTimeout
-     * delay(1000).then(doSomething);
-     * // or
-     * when(delay(1000), doSomething);
-     *
-     * // Do something 1 second after triggeringPromise resolves
-     * delay(triggeringPromise, 1000).then(doSomething, handleRejection);
-     * // or
-     * when(delay(triggeringPromise, 1000), doSomething, handleRejection);
-     *
-     * @param [promise] anything - any promise or value after which the delay will start
-     * @param msec {Number} delay in milliseconds
+	 * @param {number} msec delay in milliseconds
+     * @param {*|Promise?} value any promise or value after which
+	 *  the delay will start
+	 * @returns {Promise} promise that is equivalent to value, only delayed
+	 *  by msec
      */
-    return function delay(promise, msec) {
-        if(arguments.length < 2) {
-            msec = promise >>> 0;
-            promise = undef;
-        }
+    return function delay(msec, value) {
+		// Support reversed, deprecated argument ordering
+		if(typeof value === 'number') {
+			var tmp = value;
+			value = msec;
+			msec = tmp;
+		}
 
-        var deferred = when.defer();
-
-        setTimeout(function() {
-            deferred.resolve(promise);
-        }, msec);
-
-        return deferred.promise;
+		return when.promise(function(resolve, reject, notify) {
+			when(value, function(val) {
+				setTimer(function() {
+					resolve(val);
+				}, msec);
+			},
+			reject, notify);
+		});
     };
 
 });
-})(typeof define == 'function'
-    ? define
-    : function (deps, factory) { typeof module != 'undefined'
-        ? (module.exports = factory(require('./when')))
-        : (this.when_delay = factory(this.when));
-    }
-    // Boilerplate for AMD, Node, and browser global
-);
+})(
+	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(require); });
 
 

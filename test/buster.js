@@ -1,21 +1,38 @@
 (function() {
 
-var tests, config;
+var config = {};
 
-tests = ['test/*.js'];
-config = {};
-
-config['node'] = {
+config.node = {
 	environment: 'node',
 	rootPath: '../',
-	tests: tests
+	tests: [
+		'test/**/*-test.js'
+	]
 };
 
-config['browser'] = {
+config.browser = {
 	environment: 'browser',
+	autoRun: false,
 	rootPath: '../',
-	tests: tests,
-	sources: [ 'when.js', 'apply.js', 'delay.js', 'timeout.js', 'cancelable.js' ]
+	resources: [
+		//'**', ** is busted in buster
+		'*.js',
+		'monitor/**/*.js',
+		'node/**/*.js',
+		'unfold/**/*.js',
+		'node_modules/curl/**/*.js'
+	],
+	libs: [
+		'test/curl-config.js',
+		'node_modules/curl/src/curl.js'
+	],
+	sources: [
+		// loaded as resources
+	],
+	tests: [
+		'test/**/*-test.js',
+		'test/run.js'
+	]
 };
 
 if(typeof module != 'undefined') {
